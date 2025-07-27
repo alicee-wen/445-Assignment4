@@ -23,7 +23,27 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     @Override
     public Position insert(T value) {
         // TODO: Implement insert logic using snake and row-wise probing
-        return null;
+        if(value==null) throw new IllegalArgumentException("Value given was null");
+        System.out.println("value: " + value);
+        Position pos = hash(value);
+
+        Cell<T> start = table[pos.row][pos.col];
+
+        Boolean isFull = checkIfFull(start);
+
+        if(!isFull){
+            table[pos.row][pos.col] = new Cell<>(value);
+            return new Position(pos.row, pos.col);
+        }
+        else{
+            if(start.isInSnake){
+                Boolean emptyFound = false;
+                while(!emptyFound){
+                    
+                }
+            }
+        }
+        // if(isFull)
     }
 
     @Override
@@ -47,23 +67,61 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     @Override
     public T probe(Position p) {
         // TODO: Implement probing logic with bounds checking
-        return null;
+        if(p == null) throw new IllegalArgumentException("Position given was null");
+        int[] dims = getDimensions();
+        if(p.row >= dims[0] || p.col >= dims[1]) throw new IllegalArgumentException("Position given was out of bounds");
+        Cell<T> cell = table[p.row][p.col];
+
+        // System.out.println(cell.isDeleted);
+        // System.out.println("cell value: " + cell.value);
+        if(cell.value == null || cell.isDeleted) return null;
+        else{
+            return cell.value;
+        }
+        
     }
 
     @Override
     public void addSnake(Snake snake) {
-        // TODO: Implement snake registration
+        if(snake==null) throw new IllegalArgumentException("Snake is null");
+
+        int[] dims = getDimensions();
+        for (Position pos : snake){
+            if(pos.row<0 || pos.col<0 || pos.row>=dims[0] || pos.col>=dims[1]) throw new IllegalArgumentException("Invalid position");
+            if(table[pos.row][pos.col]==null) table[pos.row][pos.col] = new Cell<>();
+            table[pos.row][pos.col].isInSnake = true;
+        }
     }
 
     @Override
     public void removeSnake(Snake snake) {
-        // TODO: Implement snake removal
+        if(snake==null) throw new IllegalArgumentException("Snake is null");
+
+        int[] dims = getDimensions();
+        for (Position pos : snake){
+            if(pos.row<0 || pos.col<0 || pos.row>=dims[0] || pos.col>=dims[1]) throw new IllegalArgumentException("Invalid position");
+            if(!table[pos.row][pos.col].isDeleted){
+                table[pos.row][pos.col].isDeleted = true;
+                table[pos.row][pos.col].isInSnake = false;
+
+            }
+        }
     }
 
     @Override
     public int[] getDimensions() {
-        // TODO: Implement the method
-        return null;
+        int[] dimensions = new int[2];
+        dimensions[0] = table.length;
+        dimensions[1] = table[0].length;
+        return dimensions;
+    }
+
+    public boolean checkIfFull(Cell<T> cell){
+        return (cell!=null && !cell.isDeleted && cell.value!=null);
+    }
+
+    public Snake getSnakeFromCell(Cell<T> cell){
+
     }
 
     /**
@@ -73,10 +131,18 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     private static class Cell<T> {
         T value;
         boolean isDeleted;
+        boolean isInSnake;
+
+        Cell() {
+            this.value = null;
+            this.isDeleted = false;
+            this.isInSnake = false;
+        }
 
         Cell(T value) {
             this.value = value;
             this.isDeleted = false;
+            this.isInSnake = false;
         }
     }
 
@@ -96,3 +162,4 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
         return new Position(row, col);
     }
 }
+
