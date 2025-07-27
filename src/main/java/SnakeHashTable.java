@@ -26,6 +26,7 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
         if(value==null) throw new IllegalArgumentException("Value given was null");
         System.out.println("value: " + value);
         Position pos = hash(value);
+        int[] dims = getDimensions();
 
         Cell<T> curr = table[pos.row][pos.col];
 
@@ -37,24 +38,34 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
         }
         else{
 
+            //snake probing
             if(curr.isInSnake){
                 Boolean startFound = false;
                 Snake currSnake = table[pos.row][pos.col].snake;
                 Position insertAt;
                 for(Position p : currSnake){
-                    if(p.equals(pos)){
-                        startFound = true;
-                        insertAt = p;
-                        break;
+                    // if(p.equals(pos)){
+                    //     startFound = true;
                         
-                    }
+                    //     break;
+                        
+                    // }
+                    System.out.println(p);
                 }
             }
-            if(!curr.isInSnake){
-                while(!curr.isInSnake && pos.row < dim)
+            //row probing
+            else if(!curr.isInSnake){
+                while(!curr.isInSnake && pos.row < dims[0] && pos.col < dims[1]){
+                    if(pos.col+1 == dims[1]){
+                        curr = table[pos.row+1][pos.col];
+                    }
+                    curr=table[pos.row][pos.col+1];
+                    if(pos.row+1==dims[0] && pos.col+1==dims[1]) curr = table[0][0];
+                }
+                curr.value = value;
             }
         }
-        
+        return null;
     }
 
     @Override
@@ -133,7 +144,7 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     }
 
     public Snake getSnakeFromCell(Cell<T> cell){
-
+        return null;
     }
 
     /**
