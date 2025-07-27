@@ -27,23 +27,34 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
         System.out.println("value: " + value);
         Position pos = hash(value);
 
-        Cell<T> start = table[pos.row][pos.col];
+        Cell<T> curr = table[pos.row][pos.col];
 
-        Boolean isFull = checkIfFull(start);
+        Boolean isFull = checkIfFull(curr);
 
         if(!isFull){
             table[pos.row][pos.col] = new Cell<>(value);
             return new Position(pos.row, pos.col);
         }
         else{
-            if(start.isInSnake){
-                Boolean emptyFound = false;
-                while(!emptyFound){
-                    
+
+            if(curr.isInSnake){
+                Boolean startFound = false;
+                Snake currSnake = table[pos.row][pos.col].snake;
+                Position insertAt;
+                for(Position p : currSnake){
+                    if(p.equals(pos)){
+                        startFound = true;
+                        insertAt = p;
+                        break;
+                        
+                    }
                 }
             }
+            if(!curr.isInSnake){
+                while(!curr.isInSnake && pos.row < dim)
+            }
         }
-        // if(isFull)
+        
     }
 
     @Override
@@ -90,6 +101,7 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
             if(pos.row<0 || pos.col<0 || pos.row>=dims[0] || pos.col>=dims[1]) throw new IllegalArgumentException("Invalid position");
             if(table[pos.row][pos.col]==null) table[pos.row][pos.col] = new Cell<>();
             table[pos.row][pos.col].isInSnake = true;
+            table[pos.row][pos.col].snake = snake;
         }
     }
 
@@ -132,6 +144,7 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
         T value;
         boolean isDeleted;
         boolean isInSnake;
+        Snake snake;
 
         Cell() {
             this.value = null;
@@ -143,6 +156,13 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
             this.value = value;
             this.isDeleted = false;
             this.isInSnake = false;
+        }
+
+        Cell(T value, Snake snake) {
+            this.value = value;
+            this.isDeleted = false;
+            this.isInSnake = false;
+            this.snake = snake;
         }
     }
 
