@@ -80,12 +80,79 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     @Override
     public Position insert(T value, int row, int col) {
         // TODO: Perform probing starting at this position (reuse same strategy)
+        if(value==null) throw new IllegalArgumentException("Value given was null");
+       
+        Position pos = new Position(row, col);
+        int r = row;
+        int c = col;
+
+        int[] dims = getDimensions();
+
+        if(row >= dims[0] || col >= dims[1]) throw new IllegalArgumentException("Coordinates out of bounds");
+
+        Cell<T> curr = table[r][c];
+
+
+        Boolean isFull = checkIfFull(curr);
+
+        if(!isFull){
+            table[r][c] = new Cell<>(value);
+            return new Position(r, c);
+        }
+        else{
+
+            //snake probing
+            if(curr.isInSnake){
+                Boolean startFound = false;
+                Snake currSnake = table[r][c].snake;
+                Position insertAt;
+                int snakeSize = 0;
+                for(Position p : currSnake){
+                    snakeSize++;
+                }
+                for(Position p: currSnake){
+                    if(p.equals(pos)) startFound = true;
+                    if(startFound==true && table[p.row][p.col].value==null){
+                        table[p.row][p.col].value = value;
+                        return new Position(p.row, p.col);
+                    }
+                }
+            }
+            //row probing
+            else if(!curr.isInSnake){
+                while(!curr.isInSnake && r < dims[0] && c < dims[1]){
+                    if(c+1 == dims[1]){
+                        curr = table[r+1][c];
+                    }
+                    if(r+1==dims[0] && c+1==dims[1]){
+                        curr = table[0][0];
+                    curr=table[r][c+1];
+                }
+                curr.value = value;
+                return lookupKey(value);
+            }
+        }
+
         return null;
+    }
     }
 
     @Override
     public boolean deleteKey(T value) {
-        // TODO: Implement delete logic
+        if(value==null) throw new IllegalArgumentException("Value given was null");
+        int[] dims = getDimensions();
+        boolean keyFound = false;
+        
+        for (int r = 0; r < dims[0]; r++){
+            for (int c = 0; c < dims[1]; c++){
+                Cell<T> cell = table[r][c];
+                if(cell!=null && !cell.isDeleted && (cell.value).equals(value)){
+                    cell.value = null;
+                    cell.isDeleted = true;
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
