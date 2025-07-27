@@ -24,48 +24,57 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     public Position insert(T value) {
         // TODO: Implement insert logic using snake and row-wise probing
         if(value==null) throw new IllegalArgumentException("Value given was null");
-        System.out.println("value: " + value);
+        // System.out.println("value: " + value);
         Position pos = hash(value);
+        int r = pos.row;
+        int c = pos.col;
+
         int[] dims = getDimensions();
 
-        Cell<T> curr = table[pos.row][pos.col];
+        Cell<T> curr = table[r][c];
+
 
         Boolean isFull = checkIfFull(curr);
 
         if(!isFull){
-            table[pos.row][pos.col] = new Cell<>(value);
-            return new Position(pos.row, pos.col);
+            table[r][c] = new Cell<>(value);
+            return new Position(r, c);
         }
         else{
 
             //snake probing
             if(curr.isInSnake){
                 Boolean startFound = false;
-                Snake currSnake = table[pos.row][pos.col].snake;
+                Snake currSnake = table[r][c].snake;
                 Position insertAt;
+                int snakeSize = 0;
                 for(Position p : currSnake){
-                    // if(p.equals(pos)){
-                    //     startFound = true;
-                        
-                    //     break;
-                        
-                    // }
-                    System.out.println(p);
+                    snakeSize++;
+                }
+                for(Position p: currSnake){
+                    if(p.equals(pos)) startFound = true;
+                    if(startFound==true && table[p.row][p.col].value==null){
+                        table[p.row][p.col].value = value;
+                        return new Position(p.row, p.col);
+                    }
                 }
             }
             //row probing
             else if(!curr.isInSnake){
-                while(!curr.isInSnake && pos.row < dims[0] && pos.col < dims[1]){
-                    if(pos.col+1 == dims[1]){
-                        curr = table[pos.row+1][pos.col];
+                while(!curr.isInSnake && r < dims[0] && c < dims[1]){
+                    if(c+1 == dims[1]){
+                        curr = table[r+1][c];
                     }
-                    curr=table[pos.row][pos.col+1];
-                    if(pos.row+1==dims[0] && pos.col+1==dims[1]) curr = table[0][0];
+                    if(r+1==dims[0] && c+1==dims[1]){
+                        curr = table[0][0];
+                    curr=table[r][c+1];
                 }
                 curr.value = value;
+                return lookupKey(value);
             }
         }
         return null;
+    }
     }
 
     @Override
@@ -82,7 +91,18 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
 
     @Override
     public Position lookupKey(T value) {
-        // TODO: Implement lookup logic
+        if(value==null) throw new IllegalArgumentException("Value given was null");
+        int[] dims = getDimensions();
+        boolean keyFound = false;
+        
+        for (int r = 0; r < dims[0]; r++){
+            for (int c = 0; c < dims[1]; c++){
+                Cell<T> cell = table[r][c];
+                if(cell!=null && !cell.isDeleted && (cell.value).equals(value)){
+                    return new Position(r, c);
+                }
+            }
+        }
         return null;
     }
 
