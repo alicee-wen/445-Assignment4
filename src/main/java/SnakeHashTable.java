@@ -24,7 +24,8 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     public Position insert(T value) {
         // TODO: Implement insert logic using snake and row-wise probing
         if(value==null) throw new IllegalArgumentException("Value given was null");
-        // System.out.println("value: " + value);
+        System.out.println("value: " + value);
+        
         Position pos = hash(value);
         int r = pos.row;
         int c = pos.col;
@@ -47,10 +48,7 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
                 Boolean startFound = false;
                 Snake currSnake = table[r][c].snake;
                 Position insertAt;
-                int snakeSize = 0;
-                for(Position p : currSnake){
-                    snakeSize++;
-                }
+                
                 for(Position p: currSnake){
                     if(p.equals(pos)) startFound = true;
                     if(startFound==true && table[p.row][p.col].value==null){
@@ -111,8 +109,10 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
                     snakeSize++;
                 }
                 for(Position p: currSnake){
-                    if(p.equals(pos)) startFound = true;
-                    if(startFound==true && table[p.row][p.col].value==null){
+                    if(p.equals(pos)){
+                        startFound = true;
+                    }
+                    else if(startFound==true && table[p.row][p.col].value==null){
                         table[p.row][p.col].value = value;
                         return new Position(p.row, p.col);
                     }
@@ -141,35 +141,27 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     public boolean deleteKey(T value) {
         if(value==null) throw new IllegalArgumentException("Value given was null");
         int[] dims = getDimensions();
-        boolean keyFound = false;
+
+        Position pos = hash(value);
         
-        for (int r = 0; r < dims[0]; r++){
-            for (int c = 0; c < dims[1]; c++){
-                Cell<T> cell = table[r][c];
+        Cell<T> cell = table[pos.row][pos.col];
                 if(cell!=null && !cell.isDeleted && (cell.value).equals(value)){
                     cell.value = null;
                     cell.isDeleted = true;
                     return true;
                 }
-            }
-        }
-        return false;
+                else return false;
     }
 
     @Override
     public Position lookupKey(T value) {
         if(value==null) throw new IllegalArgumentException("Value given was null");
-        int[] dims = getDimensions();
-        boolean keyFound = false;
         
-        for (int r = 0; r < dims[0]; r++){
-            for (int c = 0; c < dims[1]; c++){
-                Cell<T> cell = table[r][c];
+        Position pos = hash(value);
+                Cell<T> cell = table[pos.row][pos.col];
                 if(cell!=null && !cell.isDeleted && (cell.value).equals(value)){
-                    return new Position(r, c);
+                    return pos;
                 }
-            }
-        }
         return null;
     }
 
