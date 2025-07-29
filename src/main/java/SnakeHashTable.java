@@ -22,94 +22,46 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
 
     @Override
     public Position insert(T value) {
-        // TODO: Implement insert logic using snake and row-wise probing
+        Position pos = hash(value);
+        if(value==null) throw new IllegalArgumentException("Value given was null");
         
-          if(value==null) throw new IllegalArgumentException("Value given was null");
-          System.out.println("NEW ITERATION");
-          printTable();
-  
-          Position pos = hash(value);
-          int r = pos.row;
-          int c = pos.col;
-  
-          int[] dims = getDimensions();
-  
-          Cell<T> curr = table[r][c];
-          System.out.println("value : " + value);
-          // System.out.println("curr.isinsnake = " + curr.isInSnake);
-  
-          Boolean isFull = checkIfFull(curr);
-       
-          if(!isFull){
-              // // Boolean wasInSnake = curr.isInSnake;
-              // table[r][c] = new Cell<>(value);
-              if(curr==null) table[r][c] = new Cell<>(value);
-              else curr.value = value;
-      
-              // if(wasInSnake) 
-              System.out.println("was not full");
-              return new Position(r, c);
-          }
-          else{
-  
-              //snake probing
-               //snake probing
-               if(curr.isInSnake){
-                  Boolean startFound = false;
-                  Snake currSnake = table[r][c].snake;
-                  
-                  for(Position p: currSnake){
-                      if(!startFound){
-                          if(p.equals(pos)){
-                              startFound = true;
-                          }
-                          continue;
-                      }
-                      else if(startFound){
-                          Cell<T> cell = table[p.row][p.col];
-                          if(cell.isDeleted || cell.value==null){
-                              cell.value = value;
-                              System.out.println("after snake probe insert");
-  
-                              printTable();
-                              return new Position(p.row, p.col);
-                          }
-                      }
-                          
-                      }
-                  }
-              //row probing
-              else if(!curr.isInSnake){
-                  while(!curr.isInSnake && r < dims[0] && c < dims[1]){
-                      if(c+1 == dims[1]){
-                          curr = table[r+1][c];
-                      }
-                      if(r+1==dims[0] && c+1==dims[1]){
-                          curr = table[0][0];
-                      curr=table[r][c+1];
-                  }
-                  curr.value = value;
-                  System.out.println("after row insert");
-                  printTable();
-                  return lookupKey(value);
-              }
-          }
-          System.out.println("neither");
-          printTable();
-          return null;
-    }
+        
+        int r = pos.row;
+        int c = pos.col;
+
+        int[] dims = getDimensions();
+
+        if(r >= dims[0] || c >= dims[1]) throw new IllegalArgumentException("Coordinates out of bounds");
+
+        Cell<T> curr = table[r][c];
+
+        Boolean isFull = checkIfFull(curr);
+     
+        if(!isFull){
+            if(curr==null || !curr.isInSnake) {
+                table[r][c] = new Cell<>(value);
+            }
+            else if(curr.isInSnake){
+                curr.value = value;
+            }
+            return new Position(r, c);
+        }
+        else{
+             if(curr.isInSnake){    //snake probing if given position is part of snake
+                return snakeProbe(curr, dims, pos, value);
+                }
+            else if(!curr.isInSnake){  //if start cell is not in a snake, fall to row probing
+                return rowProbe(curr, dims, r, c, value);
+            }
+        }
+        
+        throw new IllegalStateException("Table full or no empty cell found");
     }
 
     @Override
     public Position insert(T value, int row, int col) {
-        // TODO: Perform probing starting at this position (reuse same strategy)
         if(value==null) throw new IllegalArgumentException("Value given was null");
-        System.out.println("NEW ITERATION");
-        System.out.println("MANUAL INSERT AT ROW: " + row + "COL: " + col);
-        System.out.println("VALUE: " + value);
-        System.out.println("before insertion: ");
-        printTable();
-
+        
         Position pos = new Position(row, col);
         int r = row;
         int c = col;
@@ -120,51 +72,34 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
 
         Cell<T> curr = table[r][c];
 
-        Boolean isCurrNull;
-        if(curr==null) isCurrNull=true;
-        else isCurrNull = false;
-
-        System.out.println("Is curr null? " + isCurrNull);
-        if(curr!=null) System.out.println("curr.isinsnake = " + (curr.isInSnake));
-
         Boolean isFull = checkIfFull(curr);
      
         if(!isFull){
             if(curr==null || !curr.isInSnake) {
                 table[r][c] = new Cell<>(value);
-                System.out.println("curr was null or was not in snake");
             }
             else if(curr.isInSnake){
                 curr.value = value;
-                System.out.println("curr was in snake");
             }
- 
-            System.out.println("was not full");
-            System.out.println("after insert at position " + r + ", " + c);
-            printTable();
             return new Position(r, c);
         }
         else{
-
-            //snake probing
-             //snake probing
-             if(curr.isInSnake){
+             if(curr.isInSnake){    //snake probing if given position is part of snake
                 return snakeProbe(curr, dims, pos, value);
                 }
-            //if start cell is not in a snake, fall to row probing
-            else if(!curr.isInSnake){
+            else if(!curr.isInSnake){  //if start cell is not in a snake, fall to row probing
                 return rowProbe(curr, dims, r, c, value);
             }
         }
         
-        //reset wasVisited flags
-        for(int i = 0; i < dims[0]; i++){
-                    for(int j = 0; j<dims[1]; j++){
-                        Cell<T> cell = table[i][j];
-                        if (cell!= null && cell.wasVisited==true) cell.wasVisited=false;
-                    }
-                }
-        return null;
+        // //reset wasVisited flags
+        // for(int i = 0; i < dims[0]; i++){
+        //             for(int j = 0; j<dims[1]; j++){
+        //                 Cell<T> cell = table[i][j];
+        //                 if (cell!= null && cell.wasVisited==true) cell.wasVisited=false;
+        //             }
+        //         }
+        throw new IllegalStateException("Table full or no empty cell found");
     }
  
     public Position snakeProbe(Cell<T> curr, int[] dims, Position originalPos, T value){
@@ -181,10 +116,9 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
         int snakeFilled = 0;
         for(Position p: currSnake){
             snakeFilled++;
-            if(snakeFilled>snakeLength){
+            if(snakeFilled>snakeLength){ //if snake is full, go to row-probing
                 lastRow = p.row;
                 lastCol = p.col;
-                System.out.println("snake full");
                 return rowProbe(curr, dims, p.row, p.col, value);
             }
             if(!startFound){
@@ -193,47 +127,44 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
                 }
                 continue;
             }
-            else if(startFound){
+            else if(startFound){ // make sure we're going down the snake, not up the snake
                 Cell<T> cell = table[p.row][p.col];
                 if(cell.isDeleted || cell.value==null){
                     cell.value = value;
                     cell.wasVisited=true;
-                    System.out.println("after snake probe insert");
-
-                    printTable();
                     return new Position(p.row, p.col);
                 }
             }
             }
             //if snake is full, go to row probing
-            
             Position last = null;
             for (Position p: currSnake) last = p;
 
             if(last!=null){
                 return rowProbe(table[last.row][last.col], dims, last.row, last.col, value);
             } 
-            return null;
+            throw new IllegalStateException("Table full or no empty cell found");
     }
+
+
     public Position rowProbe(Cell<T> curr, int[] dims, int r, int c, T value){
-        System.out.println("in rowProbe method");
-        System.out.println("row: " + r + "col: " + c);
-    
-        int totalCount = dims[0] * dims[1];
+        int numRows = dims[0];
+        int numCols = dims[1];
+        int totalCount = numRows * numCols;
 
         if(curr==null) {
             table[r][c] = new Cell<>(value);
             curr = table[r][c];
         }
         else{
-            
             for (int i = 0; i < totalCount; i++) {
-                System.out.println("in for loop in rowProbe");
-                int row = (r + (c + i) / dims[1]) % dims[0];
-                int col = (c + i) % dims[1];
-                Cell<T> cell = table[row][col];
-                System.out.println("grabbed cell at row " + row + ", col " + col);
-                
+                int start = r * numCols + c;  // convert 2D coords to integer
+                int index = (start + i) % (totalCount); // move next by i steps, wrap around if reached end
+                int row = index / numCols; // back to 2D row coord
+                int col = index % numCols; // back to 2D col coord
+
+
+                Cell<T> cell = table[row][col];   
                 
                 
                 // if(cell!= null && cell.wasVisited) throw new IllegalStateException("Table full / no empty cell found");
@@ -241,42 +172,22 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
                 //     System.out.println("going to snake probe from rowProbe");
                 //     return snakeProbe(cell, dims, new Position(row, col), value);
                 // }
-                if(cell==null) System.out.println("Cell is null");
-                else System.out.println("Cell is not null");
-               
+            
                 if (cell == null || cell.value == null || cell.isDeleted) {
                 if (cell == null) table[row][col] = new Cell<>(value);
                 else {
                         cell.value = value;
                         cell.isDeleted = false;
                 }
-                System.out.println("Inserted by rowProbe at: (" + row + "," + col + ")");
-                printTable();
-                Position insertedAt = new Position(row, col);
                 return new Position(row, col);
                 }
                 cell.wasVisited=true;
-                System.out.println("cell inserted: value = " + value + "is cell visited?" + cell.wasVisited);
-            
-    
         }
     }
-        throw new IllegalStateException("Table full / no empty cell found, could not insert value.");
+    throw new IllegalStateException("Table full / no empty cell found, could not insert value.");
         
 }
 
-// public Position lookupKeyFromManualInsert(T value){
-//     if(value==null) throw new IllegalArgumentException("Value given was null");
-
-//     int[] dims = getDimensions();
-//     for(int r = 0; r < dims[0]; r++){
-//         for(int c = 0; c<dims[1]; c++){
-//             Cell<T> curr = table[r][c];
-//             if (curr!= null && !curr.isDeleted && curr.value.equals(value)) return new Position(r, c);
-//         }
-//     }
-//     return null;
-// }
 
     @Override
     public boolean deleteKey(T value) {
@@ -308,15 +219,11 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
 
     @Override
     public T probe(Position p) {
-        // TODO: Implement probing logic with bounds checking
         if(p == null) throw new IllegalArgumentException("Position given was null");
         int[] dims = getDimensions();
-        if(p.row >= dims[0] || p.col >= dims[1]) throw new IllegalArgumentException("Position given was out of bounds");
+        if(p.row < 0 || p.row >= dims[0] || p.col < 0 || p.col >= dims[1]) throw new IllegalArgumentException("Position given was out of bounds");
         Cell<T> cell = table[p.row][p.col];
 
-
-        // System.out.println(cell.isDeleted);
-        // System.out.println("cell value: " + cell.value);
         if(cell==null|| cell.value == null || cell.isDeleted) return null;
         else{
             return cell.value;
@@ -327,37 +234,26 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
     @Override
     public void addSnake(Snake snake) {
         if(snake==null) throw new IllegalArgumentException("Snake is null");
-        System.out.println("Before add Snake");
-        System.out.println("Snake: ");
-        for (Position p : snake){
-            System.out.println(p);
-        }
-        printTable();
-
 
         int[] dims = getDimensions();
         for (Position pos : snake){
-            if(pos.row<0 || pos.col<0 || pos.row>=dims[0] || pos.col>=dims[1]) throw new IllegalArgumentException("Invalid position");
+            if(pos.row<0 || pos.col<0 || pos.row>=dims[0] || pos.col>=dims[1]) throw new IllegalArgumentException("Invalid position from snake");
             if(table[pos.row][pos.col]==null) table[pos.row][pos.col] = new Cell<>();
             table[pos.row][pos.col].isInSnake = true;
             table[pos.row][pos.col].snake = snake;
         }
-        System.out.println("After addsnake: ");
-        printTable();
-
     }
 
     @Override
     public void removeSnake(Snake snake) {
-        if(snake==null) throw new IllegalArgumentException("Snake is null");
+        if(snake==null) throw new IllegalArgumentException("Snake is null / not found");
 
         int[] dims = getDimensions();
         for (Position pos : snake){
-            if(pos.row<0 || pos.col<0 || pos.row>=dims[0] || pos.col>=dims[1]) throw new IllegalArgumentException("Invalid position");
+            if(pos.row<0 || pos.col<0 || pos.row>=dims[0] || pos.col>=dims[1]) throw new IllegalArgumentException("Invalid position from snake to delete");
             if(!table[pos.row][pos.col].isDeleted){
                 table[pos.row][pos.col].isDeleted = true;
                 table[pos.row][pos.col].isInSnake = false;
-
             }
         }
     }
@@ -374,33 +270,29 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
         return (cell!=null && !cell.isDeleted && cell.value!=null);
     }
 
-    public Snake getSnakeFromCell(Cell<T> cell){
-        return null;
-    }
 
-
-    public void printTable() {
-        System.out.println("Table:");
-        for (int i = 0; i < table.length; i++) {
-            for (int j = 0; j < table[0].length; j++) {
-                Cell<T> cell = table[i][j];
-                String cellStr = ".";
-                if (cell != null) {
-                    if (cell.value != null) {
-                        cellStr = String.valueOf(cell.value);
-                    }
-                    if (cell.isDeleted) {
-                        cellStr = "(" + cellStr + ")";
-                    } else if (cell.isInSnake) {
-                        cellStr = "[" + cellStr + "]";
-                    }
-                }
-                System.out.printf("%-8s", cellStr); // left-aligned 8-width cell
-            }
-            System.out.println();
-        }
-        System.out.println();
-    }
+    // public void printTable() {
+    //     System.out.println("Table:");
+    //     for (int i = 0; i < table.length; i++) {
+    //         for (int j = 0; j < table[0].length; j++) {
+    //             Cell<T> cell = table[i][j];
+    //             String cellStr = ".";
+    //             if (cell != null) {
+    //                 if (cell.value != null) {
+    //                     cellStr = String.valueOf(cell.value);
+    //                 }
+    //                 if (cell.isDeleted) {
+    //                     cellStr = "(" + cellStr + ")";
+    //                 } else if (cell.isInSnake) {
+    //                     cellStr = "[" + cellStr + "]";
+    //                 }
+    //             }
+    //             System.out.printf("%-8s", cellStr); 
+    //         }
+    //         System.out.println();
+    //     }
+    //     System.out.println();
+    // }
 
     
 
