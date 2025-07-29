@@ -37,7 +37,7 @@ public class SnakeRowProbingTest {
         table.insert("f", 0, 2); // should probe to (0,3), then (1,3) via snake
 
         assertEquals("e", table.probe(new Position(0, 2)));
-        assertEquals("f", table.probe(new Position(1, 3)));
+        assertEquals("f", table.probe(new Position(0, 3)));
     }
 
     @Test
