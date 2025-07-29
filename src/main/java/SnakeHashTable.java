@@ -22,8 +22,8 @@ public class SnakeHashTable<T> implements SnakeHashTableInterface<T> {
 
     @Override
     public Position insert(T value) {
-        Position pos = hash(value);
         if(value==null) throw new IllegalArgumentException("Value given was null");
+        Position pos = hash(value);
         
         
         int r = pos.row;
